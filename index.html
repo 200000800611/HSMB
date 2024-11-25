@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator with Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://imgv3.fotor.com/images/share/Free-blue-gradient-pattern-background-from-Fotor.jpg'); /* Replace with your image path */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            border: 1px solid #ddd;
+            padding: 60px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h3 {
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+            .input-group label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .input-group input, .input-group textarea {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #0038b0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+            .btn:hover {
+                background-color: #ff002f;
+            }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+            .items-table th, .items-table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+
+            .items-table th {
+                background-color: #f2f2f2;
+            }
+
+        #invoiceSection {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Form -->
+    <div class="container" id="loginSection">
+        <h3>Login to Access Invoice System</h3>
+        <div class="input-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" placeholder="Enter username">
+        </div>
+        <div class="input-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter password">
+        </div>
+        <button class="btn" onclick="login()">Login</button>
+    </div>
+
+    <!-- Invoice Generator Section -->
+    <div class="container" id="invoiceSection">
+        <h1>Invoice Generator</h1>
+        <div class="input-group">
+            <label for="clientName">Client Name:</label>
+            <input type="text" id="clientName" placeholder="Enter client name">
+        </div>
+        <div class="input-group">
+            <label for="clientContactNumber">Client Contact Number:</label>
+            <textarea id="clientContactNumber" placeholder="Enter Client Contact Number"></textarea>
+        </div>
+        <div class="input-group">
+            <label for="itemName">Item Name:</label>
+            <input type="text" id="itemName" placeholder="Enter item name">
+        </div>
+        <div class="input-group">
+            <label for="itemPrice">Item Price (LKR):</label>
+            <input type="number" id="itemPrice" placeholder="Enter item price">
+        </div>
+        <div class="input-group">
+            <label for="itemQuantity">Item Quantity:</label>
+            <input type="number" id="itemQuantity" placeholder="Enter item quantity">
+        </div>
+        <div class="input-group">
+            <label for="discount">Discount (%):</label>
+            <input type="number" id="discount" placeholder="Enter discount percentage (Optional)">
+        </div>
+        <button class="btn" onclick="addItem()">Add Item</button>
+
+        <table class="items-table" id="itemsTable">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Price (LKR)</th>
+                    <th>Quantity</th>
+                    <th>Total (LKR)</th>
+                </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+        </table>
+
+        <button class="btn" onclick="generateInvoice()">Generate Invoice</button>
+        <button class="btn" onclick="printInvoice()">Print Invoice</button>
+
+        <div id="invoiceOutput" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Replace with your actual login credentials
+            if (username === "admin" && password === "password") {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('invoiceSection').style.display = 'block';
+            } else {
+                alert("Incorrect username or password");
+            }
+        }
+
+        function addItem() {
+            const itemName = document.getElementById('itemName').value;
+            const itemPrice = document.getElementById('itemPrice').value;
+            const itemQuantity = document.getElementById('itemQuantity').value;
+
+            if (itemName && itemPrice && itemQuantity) {
+                const tableBody = document.getElementById('itemsBody');
+                const newRow = tableBody.insertRow();
+
+                const nameCell = newRow.insertCell(0);
+                const priceCell = newRow.insertCell(1);
+                const quantityCell = newRow.insertCell(2);
+                const totalCell = newRow.insertCell(3);
+
+                const price = parseFloat(itemPrice).toFixed(2);
+                const quantity = parseInt(itemQuantity);
+                const total = (price * quantity).toFixed(2);
+
+                nameCell.textContent = itemName;
+                priceCell.textContent = price;
+                quantityCell.textContent = quantity;
+                totalCell.textContent = total;
+
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+                document.getElementById('itemQuantity').value = '';
+            } else {
+                alert('Please enter item name, price, and quantity.');
+            }
+        }
+
+        function generateInvoice() {
+            const clientName = document.getElementById('clientName').value;
+            const clientContactNumber = document.getElementById('clientContactNumber').value;
+            const tableBody = document.getElementById('itemsBody');
+            let total = 0;
+
+            // Get the discount percentage
+            const discountPercentage = parseFloat(document.getElementById('discount').value) || 0;
+
+            if (clientName && clientContactNumber && tableBody.rows.length > 0) {
+                let invoiceHTML = `<h2>Invoice</h2>`;
+                invoiceHTML += `<p><strong>Company Name:</strong> Hahsan Sachin</p>`;
+                invoiceHTML += `<p><strong>Contact Number:</strong> 07xxxxxxx</p>`;
+                invoiceHTML += `<p><strong>Address:</strong> Bibilioya, Thaligama</p>`;
+                invoiceHTML += `<hr>`;
+                invoiceHTML += `<p><strong>Client Name:</strong> ${clientName}</p>`;
+                invoiceHTML += `<p><strong>Client Contact Number:</strong> ${clientContactNumber}</p>`;
+                invoiceHTML += `<table class="items-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Item Name</th>
+                                                <th>Price (LKR)</th>
+                                                <th>Quantity</th>
+                                                <th>Total (LKR)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`;
+
+                for (let i = 0; i < tableBody.rows.length; i++) {
+                    const itemName = tableBody.rows[i].cells[0].textContent;
+                    const itemPrice = parseFloat(tableBody.rows[i].cells[1].textContent);
+                    const itemQuantity = parseInt(tableBody.rows[i].cells[2].textContent);
+                    const itemTotal = parseFloat(tableBody.rows[i].cells[3].textContent);
+                    total += itemTotal;
+
+                    invoiceHTML += `<tr>
+                                            <td>${itemName}</td>
+                                            <td>${itemPrice.toFixed(2)}</td>
+                                            <td>${itemQuantity}</td>
+                                            <td>${itemTotal.toFixed(2)}</td>
+                                        </tr>`;
+                }
+
+                // Apply the discount to the total
+                const discountAmount = (total * discountPercentage) / 100;
+                const finalTotal = total - discountAmount;
+
+                invoiceHTML += `</tbody></table>`;
+                invoiceHTML += `<p><strong>Total: </strong>${total.toFixed(2)} LKR</p>`;
+                invoiceHTML += `<p><strong>Discount (${discountPercentage}%): </strong>${discountAmount.toFixed(2)} LKR</p>`;
+                invoiceHTML += `<p><strong>Final Total: </strong>${finalTotal.toFixed(2)} LKR</p>`;
+                invoiceHTML += `<hr>`;
+                invoiceHTML += `<p><strong>Thank you for your purchase!</strong></p>`;
+
+                document.getElementById('invoiceOutput').innerHTML = invoiceHTML;
+            } else {
+                alert("Please fill out all fields and add items.");
+            }
+        }
+
+        function printInvoice() {
+            const invoiceContent = document.getElementById('invoiceOutput').innerHTML;
+            const printWindow = window.open('', '', 'height=400,width=800');
+            printWindow.document.write('<html><head><title>Invoice</title></head><body>');
+            printWindow.document.write(invoiceContent);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+    </script>
+</body>
+</html>
